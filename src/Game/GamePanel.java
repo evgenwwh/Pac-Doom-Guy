@@ -71,8 +71,10 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
 
     public void incrementScore(int points) {
         score += points;
-        scoreLabel.setText("Score: " + score);
-        scoreLabel.repaint();
+        System.out.println("New score: " + score); // Добавить для проверки
+        SwingUtilities.invokeLater(() -> {
+            scoreLabel.setText("Score: " + score);
+        });
     }
 
     public int[][] getMap() {
@@ -93,7 +95,7 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
             return new Point(720,130);
         }
         if (map == MapManager.map5) {
-            return new Point(480, 170);
+            return new Point(475, 170);
         }
         return null;
     }

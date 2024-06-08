@@ -86,7 +86,7 @@ public class MenuPanel {
             gamePanel.startGame(MapManager.map3);
             gamePanel.requestFocusInWindow();
         }
-        if ("Earth".equals(mapName)) {
+        if ("Space ship".equals(mapName)) {
             menuFrame.getContentPane().removeAll();
             menuFrame.add(gamePanel);
             menuFrame.revalidate();

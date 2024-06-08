@@ -78,6 +78,7 @@ public class Player implements KeyListener {
     private void moveCharacter() {
         int prevX = playerX;
         int prevY = playerY;
+        System.out.println("Attempting to move character: CurrentKey=" + currentKey);
 
         switch (currentKey) {
             case "W":
@@ -97,6 +98,7 @@ public class Player implements KeyListener {
         if (!checker.canMove(playerX, playerY, playerWidth, playerHeight)) {
             playerX = prevX;
             playerY = prevY;
+            System.out.println("Movement blocked: (" + playerX + "," + playerY + ")");
         } else {
             collectDot();
         }
@@ -106,30 +108,32 @@ public class Player implements KeyListener {
     }
 
     private void collectDot() {
-        int cellX = (playerX + gamePanel.mapOffsetX) / MapManager.cellSize;
-        int cellY = (playerY + gamePanel.mapOffsetY) / MapManager.cellSize;
+        int cellX = (playerX - gamePanel.mapOffsetX) / MapManager.cellSize;
+        int cellY = (playerY - gamePanel.mapOffsetY) / MapManager.cellSize;
+        System.out.println("Checking dot collection at: (" + cellX + "," + cellY + ")");
 
         JLabel[][] dotGrid = MapManager.getDotGrid();
         int[][] map = gamePanel.getMap();
         if (cellY >= 0 && cellY < dotGrid.length && cellX >= 0 && cellX < dotGrid[0].length) {
             if (map[cellY][cellX] == 2) {
-                gamePanel.incrementScore(1);  // Увеличиваем счет
-                map[cellY][cellX] = 0;        // Меняем карту, убирая точку
-                if (dotGrid[cellY][cellX] != null) {
-                    dotGrid[cellY][cellX].setVisible(false);
-                    dotGrid[cellY][cellX].getParent().revalidate();
-                    dotGrid[cellY][cellX].getParent().repaint();
-                    dotGrid[cellY][cellX] = null;  // Удаляем ссылку на JLabel
-                }
+                SwingUtilities.invokeLater(() -> {
+                    gamePanel.incrementScore(1);  // Увеличиваем счет
+                    map[cellY][cellX] = 0;        // Меняем карту, убирая точку
+                    if (dotGrid[cellY][cellX] != null) {
+                        dotGrid[cellY][cellX].setVisible(false);
+                        dotGrid[cellY][cellX].getParent().revalidate();
+                        dotGrid[cellY][cellX].getParent().repaint();
+                        dotGrid[cellY][cellX] = null;  // Удаляем ссылку на JLabel
+                    }
+                });
             }
         }
     }
 
-
     private void initializePosition() {
         playerWidth = 27;
         playerHeight = 38;
-        playerSpeed = 3;
+        playerSpeed = 2;
         counter = 0;
         currentIcon = downIcon1;
         playerLabel.setIcon(currentIcon);
@@ -171,6 +175,7 @@ public class Player implements KeyListener {
             currentKey = newKey;
             updateIcon();
         }
+        System.out.println("Key pressed: " + newKey);
     }
 
     @Override
@@ -183,6 +188,8 @@ public class Player implements KeyListener {
         // Не используется
     }
 }
+
+
 
 
 
