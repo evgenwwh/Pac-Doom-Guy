@@ -15,6 +15,8 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     JPanel[][] panelGrid;
     int mapOffsetX;
     int mapOffsetY;
+    JLabel scoreLabel;
+    int score = 0;
 
     public GamePanel(JFrame frame) {
         this.frame = frame;
@@ -26,11 +28,15 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         mouseCoordinatesLabel = new JLabel();
         mouseCoordinatesLabel.setBounds(10, 10, 100, 20);
         add(mouseCoordinatesLabel);
+
+        scoreLabel = new JLabel("Score: 0");
+        scoreLabel.setBounds(10, 30, 200, 30);
+        scoreLabel.setForeground(Color.white);
+        add(scoreLabel);
     }
 
     public void startGame(int[][] map) {
         this.map = map;
-
 
         // Рассчитываем смещения карты относительно центра окна
         calculateMapOffset(map);
@@ -63,6 +69,15 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         gameThread.start();
     }
 
+    public void incrementScore(int points) {
+        score += points;
+        scoreLabel.setText("Score: " + score);
+        scoreLabel.repaint();
+    }
+
+    public int[][] getMap() {
+        return map;
+    }
 
     public Point findSpawnPoint(int[][] map) {
         if (map == MapManager.map1) {
@@ -82,6 +97,7 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         }
         return null;
     }
+
     private void calculateMapOffset(int[][] map) {
         int mapWidth = map[0].length * MapManager.cellSize;
         int mapHeight = map.length * MapManager.cellSize;
@@ -115,6 +131,9 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         mouseCoordinatesLabel.setText("X: " + e.getX() + " Y: " + e.getY());
     }
 }
+
+
+
 
 
 

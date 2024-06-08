@@ -12,32 +12,24 @@ public class Checker {
     }
 
     public boolean canMove(int x, int y, int width, int height) {
-        // Преобразование координат пикселей персонажа в координаты ячеек карты с учетом смещения
         int left = (x - mapOffsetX) / MapManager.cellSize;
-        int right = (x + width - 1 - mapOffsetX) / MapManager.cellSize;
+        int right = (x + width - mapOffsetX - 1) / MapManager.cellSize;
         int top = (y - mapOffsetY) / MapManager.cellSize;
-        int bottom = (y + height - 1 - mapOffsetY) / MapManager.cellSize;
+        int bottom = (y + height - mapOffsetY - 1) / MapManager.cellSize;
 
-
-
-        // Проверка границ карты
-        if (left < 0 || right >= map[0].length || top < 0 || bottom >= map.length) {
-            System.out.println("Collision with boundary");
-            return false;
-        }
-
-        // Проверка каждой ячейки в пределах занимаемого игроком пространства
         for (int i = top; i <= bottom; i++) {
             for (int j = left; j <= right; j++) {
-                if (map[i][j] == 1) {
-                    System.out.println("Collision with wall at map cell: (" + i + ", " + j + ")");
+                if (i < 0 || i >= map.length || j < 0 || j >= map[0].length || map[i][j] == 1) {
                     return false;
                 }
             }
         }
-
         return true;
     }
 }
+
+
+
+
 
 

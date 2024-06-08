@@ -29,9 +29,6 @@ public class Player implements KeyListener {
         initializePosition();
         gamePanel.add(playerLabel);
         gamePanel.add(boundingBoxLabel);
-
-        System.out.println("Initial Player coordinates (pixels): (" + playerX + ", " + playerY + ")");
-        System.out.println("Initial Player coordinates (cells): (" + (playerY + gamePanel.mapOffsetY) / MapManager.cellSize + ", " + (playerX + gamePanel.mapOffsetX) / MapManager.cellSize + ")");
     }
 
     public JLabel getPlayerLabel() {
@@ -100,14 +97,34 @@ public class Player implements KeyListener {
         if (!checker.canMove(playerX, playerY, playerWidth, playerHeight)) {
             playerX = prevX;
             playerY = prevY;
+        } else {
+            collectDot();
         }
-
-        System.out.println("Player coordinates: (" + playerX + ", " + playerY + ")");
-        System.out.println("Player cell coordinates: (" + (playerY + gamePanel.mapOffsetY) / MapManager.cellSize + ", " + (playerX + gamePanel.mapOffsetX) / MapManager.cellSize + ")");
 
         playerLabel.setLocation(playerX, playerY);
         updateBoundingBox();
     }
+
+    private void collectDot() {
+        int cellX = (playerX + gamePanel.mapOffsetX) / MapManager.cellSize;
+        int cellY = (playerY + gamePanel.mapOffsetY) / MapManager.cellSize;
+
+        JLabel[][] dotGrid = MapManager.getDotGrid();
+        int[][] map = gamePanel.getMap();
+        if (cellY >= 0 && cellY < dotGrid.length && cellX >= 0 && cellX < dotGrid[0].length) {
+            if (map[cellY][cellX] == 2) {
+                gamePanel.incrementScore(1);  // Увеличиваем счет
+                map[cellY][cellX] = 0;        // Меняем карту, убирая точку
+                if (dotGrid[cellY][cellX] != null) {
+                    dotGrid[cellY][cellX].setVisible(false);
+                    dotGrid[cellY][cellX].getParent().revalidate();
+                    dotGrid[cellY][cellX].getParent().repaint();
+                    dotGrid[cellY][cellX] = null;  // Удаляем ссылку на JLabel
+                }
+            }
+        }
+    }
+
 
     private void initializePosition() {
         playerWidth = 27;
@@ -121,8 +138,6 @@ public class Player implements KeyListener {
 
         boundingBoxLabel.setSize(playerWidth, playerHeight);
         boundingBoxLabel.setLocation(playerX, playerY);
-
-        System.out.println("Initial Player coordinates: (" + playerX + ", " + playerY + ")");
     }
 
     private void updateBoundingBox() {
@@ -137,7 +152,6 @@ public class Player implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        System.out.println("Key pressed: " + e.getKeyChar());
         String newKey = "";
         switch (e.getKeyCode()) {
             case KeyEvent.VK_W:
@@ -156,7 +170,6 @@ public class Player implements KeyListener {
         if (!newKey.equals(currentKey)) {
             currentKey = newKey;
             updateIcon();
-            System.out.println("Changed direction to: " + currentKey);
         }
     }
 
@@ -170,6 +183,10 @@ public class Player implements KeyListener {
         // Не используется
     }
 }
+
+
+
+
 
 
 
