@@ -8,6 +8,7 @@ import java.awt.event.KeyListener;
 public class Player implements KeyListener {
     GamePanel gamePanel;
     int playerX, playerY, playerSpeed, playerWidth, playerHeight;
+    int initialX, initialY;
     int playerDX = 0; // Направление движения по X
     int playerDY = 0; // Направление движения по Y
     private ImageIcon upIcon1, downIcon1, leftIcon1, rightIcon1;
@@ -24,6 +25,8 @@ public class Player implements KeyListener {
         this.checker = checker;
         this.playerX = initialX;
         this.playerY = initialY;
+        this.initialX = initialX; // Save the initial position
+        this.initialY = initialY;
         playerLabel = new JLabel();
         boundingBoxLabel = new JLabel();
         boundingBoxLabel.setBorder(BorderFactory.createLineBorder(Color.RED));
@@ -161,6 +164,14 @@ public class Player implements KeyListener {
         gamePanel.repaint();
     }
 
+    public Point getCurrentPosition() {
+        return new Point(playerX, playerY);
+    }
+
+    public Point getInitialPosition() {
+        return new Point(initialX, initialY);
+    }
+
     @Override
     public void keyPressed(KeyEvent e) {
         String newKey = "";
@@ -194,13 +205,3 @@ public class Player implements KeyListener {
         // Не используется
     }
 }
-
-
-
-
-
-
-
-
-
-

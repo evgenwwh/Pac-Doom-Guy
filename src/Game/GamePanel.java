@@ -83,9 +83,9 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
 
     private void addGhosts() {
         // Ensure ghost initial positions are within the map bounds
-        ghosts.add(new Demons(this, checker, 516, 754));
-        ghosts.add(new Demons(this, checker, 1373, 339));
-        ghosts.add(new Demons(this, checker, 1375, 338));
+        ghosts.add(new Demons(this, checker, 1375, 338, 5000, 7000)); // Valid position within map bounds, move duration 5 sec, chase interval 7 sec
+        ghosts.add(new Demons(this, checker,  1375, 338, 5000, 10000)); // Valid position within map bounds, move duration 5 sec, chase interval 10 sec
+        ghosts.add(new Demons(this, checker, 1373, 339, 5000, 15000)); // Valid position within map bounds, move duration 5 sec, chase interval 15 sec
 
         for (Demons ghost : ghosts) {
             add(ghost.getGhostLabel());
@@ -168,6 +168,5 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         mouseCoordinatesLabel.setText("X: " + e.getX() + " Y: " + e.getY());
     }
 }
-
 
 
