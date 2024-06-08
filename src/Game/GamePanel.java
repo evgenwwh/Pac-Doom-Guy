@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import java.util.ArrayList;
 
 public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     JFrame frame;
@@ -13,10 +14,10 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     int[][] map;
     JLabel mouseCoordinatesLabel;
     JPanel[][] panelGrid;
-    int mapOffsetX;
-    int mapOffsetY;
-    JLabel scoreLabel;
-    int score = 0;
+    int mapOffsetX, mapOffsetY;
+    JLabel scoreLabel, timeLabel;
+    int score = 0, gameTime = 0;
+    ArrayList<Demons> ghosts;
 
     public GamePanel(JFrame frame) {
         this.frame = frame;
@@ -33,35 +34,46 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         scoreLabel.setBounds(10, 30, 200, 30);
         scoreLabel.setForeground(Color.white);
         add(scoreLabel);
+
+        timeLabel = new JLabel("Time: 00:00");
+        timeLabel.setBounds(10, 60, 200, 30);
+        timeLabel.setForeground(Color.white);
+        add(timeLabel);
+
+        ghosts = new ArrayList<>();
+    }
+
+    public int getMapOffsetX() {
+        return mapOffsetX;
+    }
+
+    public int getMapOffsetY() {
+        return mapOffsetY;
+    }
+
+    public int[][] getMap() {
+        return map;
     }
 
     public void startGame(int[][] map) {
         this.map = map;
-
-        // Рассчитываем смещения карты относительно центра окна
         calculateMapOffset(map);
-
-        // Создаем Checker с учетом этих смещений
         checker = new Checker(map, mapOffsetX, mapOffsetY);
 
-        // Находим точку появления игрока
         Point spawnPoint = findSpawnPoint(map);
-        int initialX = spawnPoint.x;
-        int initialY = spawnPoint.y;
-
-        // Создаем игрока с учетом точки появления и проверяющего объекта
-        player = new Player(this, checker, initialX, initialY);
+        player = new Player(this, checker, spawnPoint.x, spawnPoint.y);
         add(player.getPlayerLabel());
         addKeyListener(player);
         requestFocusInWindow();
 
-        // Создаем панель карты и размещаем ее
+        addGhosts();  // Initialize and add ghosts here
+
         JPanel mapPanel = MapManager.createMapPanel(map);
-        mapPanel.setBounds(0, 0, frame.getWidth(), frame.getHeight());
+        mapPanel.setBounds(mapOffsetX, mapOffsetY, map[0].length * MapManager.cellSize, map.length * MapManager.cellSize);
         add(mapPanel);
 
-        // Получаем таблицу панелей из MapManager
         panelGrid = MapManager.getPanelGrid();
+        new CustomTimer(1000, this::updateGameTime).start();
 
         revalidate();
         repaint();
@@ -69,33 +81,55 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         gameThread.start();
     }
 
-    public void incrementScore(int points) {
-        score += points;
-        System.out.println("New score: " + score); // Добавить для проверки
+    private void addGhosts() {
+        // Ensure ghost initial positions are within the map bounds
+        ghosts.add(new Demons(this, checker, 516, 754));
+        ghosts.add(new Demons(this, checker, 1373, 339));
+        ghosts.add(new Demons(this, checker, 1375, 338));
+
+        for (Demons ghost : ghosts) {
+            add(ghost.getGhostLabel());
+        }
+    }
+
+    private void updateGameTime() {
+        gameTime++;
         SwingUtilities.invokeLater(() -> {
-            scoreLabel.setText("Score: " + score);
+            int minutes = gameTime / 60;
+            int seconds = gameTime % 60;
+            timeLabel.setText(String.format("Time: %02d:%02d", minutes, seconds));
         });
     }
 
-    public int[][] getMap() {
-        return map;
+    public void incrementScore(int points) {
+        score += points;
+        SwingUtilities.invokeLater(() -> scoreLabel.setText("Score: " + score));
+    }
+
+    public void gameOver() {
+        gameThread = null;
+        for (Demons ghost : ghosts) {
+            ghost.stop();
+        }
+        JOptionPane.showMessageDialog(this, "Game Over! Your score: " + score + ", Time: " + timeLabel.getText());
+        System.exit(0);
     }
 
     public Point findSpawnPoint(int[][] map) {
         if (map == MapManager.map1) {
-            return new Point(528, 306);
+            return new Point(522, 334);
         }
         if (map == MapManager.map2) {
-            return new Point(570,159);
+            return new Point(570, 159);
         }
         if (map == MapManager.map3) {
             return new Point(406, 156);
         }
         if (map == MapManager.map4) {
-            return new Point(720,130);
+            return new Point(720, 130);
         }
         if (map == MapManager.map5) {
-            return new Point(475, 170);
+            return new Point(480, 170);
         }
         return null;
     }
@@ -103,29 +137,30 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     private void calculateMapOffset(int[][] map) {
         int mapWidth = map[0].length * MapManager.cellSize;
         int mapHeight = map.length * MapManager.cellSize;
-        mapOffsetX = (1920 - mapWidth) / 2;
-        mapOffsetY = (1080 - mapHeight) / 2;
-        System.out.println("Map offset X: " + mapOffsetX + ", Map offset Y: " + mapOffsetY);
+        mapOffsetX = (frame.getWidth() - mapWidth) / 2;
+        mapOffsetY = (frame.getHeight() - mapHeight) / 2;
     }
 
     @Override
     public void run() {
         while (gameThread != null) {
             try {
-                Thread.sleep(16); // Примерно 60 FPS
-                if (player != null) {
-                    player.update();
-                    repaint();
-                }
+                Thread.sleep(16); // Approx. 60 frames per second
+                player.update();
+                repaint();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
             }
         }
     }
 
+    public Player getPlayer() {
+        return player;
+    }
+
     @Override
     public void mouseDragged(MouseEvent e) {
-        // Не используется
+        // Implement as needed for mouse interactions
     }
 
     @Override
@@ -133,11 +168,6 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         mouseCoordinatesLabel.setText("X: " + e.getX() + " Y: " + e.getY());
     }
 }
-
-
-
-
-
 
 
 

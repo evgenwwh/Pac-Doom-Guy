@@ -8,6 +8,8 @@ import java.awt.event.KeyListener;
 public class Player implements KeyListener {
     GamePanel gamePanel;
     int playerX, playerY, playerSpeed, playerWidth, playerHeight;
+    int playerDX = 0; // Направление движения по X
+    int playerDY = 0; // Направление движения по Y
     private ImageIcon upIcon1, downIcon1, leftIcon1, rightIcon1;
     private ImageIcon upIcon2, downIcon2, leftIcon2, rightIcon2;
     private ImageIcon currentIcon;
@@ -78,27 +80,33 @@ public class Player implements KeyListener {
     private void moveCharacter() {
         int prevX = playerX;
         int prevY = playerY;
-        System.out.println("Attempting to move character: CurrentKey=" + currentKey);
 
         switch (currentKey) {
             case "W":
                 playerY -= playerSpeed;
+                playerDX = 0;
+                playerDY = -1;
                 break;
             case "S":
                 playerY += playerSpeed;
+                playerDX = 0;
+                playerDY = 1;
                 break;
             case "A":
                 playerX -= playerSpeed;
+                playerDX = -1;
+                playerDY = 0;
                 break;
             case "D":
                 playerX += playerSpeed;
+                playerDX = 1;
+                playerDY = 0;
                 break;
         }
 
         if (!checker.canMove(playerX, playerY, playerWidth, playerHeight)) {
             playerX = prevX;
             playerY = prevY;
-            System.out.println("Movement blocked: (" + playerX + "," + playerY + ")");
         } else {
             collectDot();
         }
@@ -110,20 +118,19 @@ public class Player implements KeyListener {
     private void collectDot() {
         int cellX = (playerX - gamePanel.mapOffsetX) / MapManager.cellSize;
         int cellY = (playerY - gamePanel.mapOffsetY) / MapManager.cellSize;
-        System.out.println("Checking dot collection at: (" + cellX + "," + cellY + ")");
 
         JLabel[][] dotGrid = MapManager.getDotGrid();
         int[][] map = gamePanel.getMap();
         if (cellY >= 0 && cellY < dotGrid.length && cellX >= 0 && cellX < dotGrid[0].length) {
             if (map[cellY][cellX] == 2) {
                 SwingUtilities.invokeLater(() -> {
-                    gamePanel.incrementScore(1);  // Увеличиваем счет
-                    map[cellY][cellX] = 0;        // Меняем карту, убирая точку
+                    gamePanel.incrementScore(1);
+                    map[cellY][cellX] = 0;
                     if (dotGrid[cellY][cellX] != null) {
                         dotGrid[cellY][cellX].setVisible(false);
                         dotGrid[cellY][cellX].getParent().revalidate();
                         dotGrid[cellY][cellX].getParent().repaint();
-                        dotGrid[cellY][cellX] = null;  // Удаляем ссылку на JLabel
+                        dotGrid[cellY][cellX] = null;
                     }
                 });
             }
@@ -175,7 +182,6 @@ public class Player implements KeyListener {
             currentKey = newKey;
             updateIcon();
         }
-        System.out.println("Key pressed: " + newKey);
     }
 
     @Override
