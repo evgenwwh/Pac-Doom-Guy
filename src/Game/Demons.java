@@ -2,20 +2,18 @@ package Game;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Random;
 
 public class Demons implements Runnable {
     private GamePanel gamePanel;
-    private int ghostX, ghostY, ghostSpeed = 2, ghostWidth = 27, ghostHeight = 38;
+    private int ghostX, ghostY, ghostSpeed = 3, ghostWidth = 27, ghostHeight = 38;
     private ImageIcon ghostIcon = new ImageIcon(getClass().getResource("/images/demons/demon1.png"));
     private JLabel ghostLabel = new JLabel(ghostIcon);
     private Checker checker;
-    private Random random = new Random();
     private boolean running = true;
+    private int moveDirection = -1;
+    private int moveCounter = 0;
 
-    // Current direction
-    private int directionX = 0;
-    private int directionY = 0;
+    private CustomTimer moveTimer;
 
     public Demons(GamePanel gamePanel, Checker checker, int initialX, int initialY) {
         this.gamePanel = gamePanel;
@@ -25,16 +23,19 @@ public class Demons implements Runnable {
         ghostLabel.setSize(ghostWidth, ghostHeight);
         ghostLabel.setLocation(ghostX, ghostY);
         gamePanel.add(ghostLabel);
-        chooseNewDirection();
-        new Thread(this).start(); // Start the thread for this demon
+
+        moveTimer = new CustomTimer(15, this::moveGhost);
+        moveTimer.start();
+
+        new Thread(this).start();
     }
 
     @Override
     public void run() {
         while (running) {
-            moveGhost();
             try {
-                Thread.sleep(18); // Adjust the sleep time as needed for movement speed
+                checkCollisionWithPlayer();
+                Thread.sleep(16);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -42,39 +43,72 @@ public class Demons implements Runnable {
     }
 
     public void moveGhost() {
-        int newX = ghostX + directionX * ghostSpeed;
-        int newY = ghostY + directionY * ghostSpeed;
-
-        if (checker.canMove(newX, newY, ghostWidth, ghostHeight)) {
-            ghostX = newX;
-            ghostY = newY;
-            System.out.println("Ghost moving to: (" + ghostX + ", " + ghostY + ")");
-        } else {
-            System.out.println("Ghost hit a wall at: (" + newX + ", " + newY + ")");
+        if (moveCounter <= 0 || !canMoveInCurrentDirection()) {
             chooseNewDirection();
+            checkCollisionWithPlayer();
         }
 
-        ghostLabel.setLocation(ghostX, ghostY);
-        checkCollisionWithPlayer();
+        int dx = 0, dy = 0;
+        switch (moveDirection) {
+            case 0: dx = -ghostSpeed; break;
+            case 1: dx = ghostSpeed; break;
+            case 2: dy = -ghostSpeed; break;
+            case 3: dy = ghostSpeed; break;
+        }
+
+        if (checker.canMove(ghostX + dx, ghostY + dy, ghostWidth, ghostHeight)) {
+            ghostX += dx;
+            ghostY += dy;
+            ghostLabel.setLocation(ghostX, ghostY);
+            moveCounter--;
+        } else {
+            moveCounter = 0; // Reset the counter if movement is blocked
+        }
     }
 
     private void chooseNewDirection() {
-        int[] directionsX = {1, -1, 0, 0}; // Right, Left, Stop, Stop
-        int[] directionsY = {0, 0, 1, -1}; // Stop, Stop, Down, Up
+        int trials = 0;
+        boolean canMove;
+        do {
+            moveDirection = (int) (Math.random() * 4);  // Generate a random direction
+            int dx = 0, dy = 0;
+            switch (moveDirection) {
+                case 0: dx = -ghostSpeed; break;
+                case 1: dx = ghostSpeed; break;
+                case 2: dy = -ghostSpeed; break;
+                case 3: dy = ghostSpeed; break;
+            }
+            canMove = checker.canMove(ghostX + dx, ghostY + dy, ghostWidth, ghostHeight);
+            trials++;
+        } while (!canMove && trials < 10);
 
-        int randomIndex = random.nextInt(4);
-        directionX = directionsX[randomIndex];
-        directionY = directionsY[randomIndex];
+        moveCounter = (int) (Math.random() * 51) + 50;
+    }
+    private void checkCollisionWithPlayer() {
+        Rectangle ghostBounds = new Rectangle(ghostX, ghostY, ghostWidth + 10, ghostHeight + 10);
+        Rectangle playerBounds = new Rectangle(gamePanel.getPlayer().getPlayerX(), gamePanel.getPlayer().getPlayerY(), gamePanel.getPlayer().getPlayerWidth() + 10, gamePanel.getPlayer().getPlayerHeight() + 10);
 
-        System.out.println("New direction chosen: (" + directionX + ", " + directionY + ")");
+
+        if (ghostBounds.intersects(playerBounds)) {
+            if (!gamePanel.getPlayer().isInvulnerable()) {
+                gamePanel.playerTouchedByGhost();
+            }
+        }
     }
 
-    private void checkCollisionWithPlayer() {
-        Rectangle ghostRect = new Rectangle(ghostX, ghostY, ghostWidth, ghostHeight);
-        Rectangle playerRect = new Rectangle(gamePanel.getPlayer().playerX, gamePanel.getPlayer().playerY, gamePanel.getPlayer().playerWidth, gamePanel.getPlayer().playerHeight);
-        if (ghostRect.intersects(playerRect)) {
-            gamePanel.gameOver();
+
+
+
+
+    private boolean canMoveInCurrentDirection() {
+        int dx = 0, dy = 0;
+        switch (moveDirection) {
+            case 0: dx = -ghostSpeed; break;
+            case 1: dx = ghostSpeed; break;
+            case 2: dy = -ghostSpeed; break;
+            case 3: dy = ghostSpeed; break;
         }
+        return checker.canMove(ghostX + dx, ghostY + dy, ghostWidth, ghostHeight);
     }
 
     public JLabel getGhostLabel() {
@@ -83,9 +117,9 @@ public class Demons implements Runnable {
 
     public void stop() {
         running = false;
+        moveTimer.stop(); // Stop the timer when stopping the demon
     }
 }
-
 
 
 

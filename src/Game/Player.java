@@ -8,8 +8,8 @@ import java.awt.event.KeyListener;
 public class Player implements KeyListener {
     GamePanel gamePanel;
     int playerX, playerY, playerSpeed, playerWidth, playerHeight;
-    int playerDX = 0; // Направление движения по X
-    int playerDY = 0; // Направление движения по Y
+    int playerDX = 0;
+    int playerDY = 0;
     private ImageIcon upIcon1, downIcon1, leftIcon1, rightIcon1;
     private ImageIcon upIcon2, downIcon2, leftIcon2, rightIcon2;
     private ImageIcon currentIcon;
@@ -18,12 +18,18 @@ public class Player implements KeyListener {
     private JLabel playerLabel;
     private JLabel boundingBoxLabel;
     private Checker checker;
+    private int initialX, initialY;
+    private boolean isInvulnerable = false;
+    private long invulnerableTime = 2000;
+    private long lastRespawnTime;;
 
     public Player(GamePanel gamePanel, Checker checker, int initialX, int initialY) {
         this.gamePanel = gamePanel;
         this.checker = checker;
         this.playerX = initialX;
         this.playerY = initialY;
+        this.initialX = initialX;
+        this.initialY = initialY;
         playerLabel = new JLabel();
         boundingBoxLabel = new JLabel();
         boundingBoxLabel.setBorder(BorderFactory.createLineBorder(Color.RED));
@@ -31,7 +37,29 @@ public class Player implements KeyListener {
         initializePosition();
         gamePanel.add(playerLabel);
         gamePanel.add(boundingBoxLabel);
+
     }
+
+    public void respawn() {
+        this.playerX = initialX;
+        this.playerY = initialY;
+        playerLabel.setLocation(playerX, playerY);
+        makeInvulnerable();
+    }
+    public void makeInvulnerable() {
+        lastRespawnTime = System.currentTimeMillis();
+        isInvulnerable = true;
+    }
+
+    public boolean isInvulnerable() {
+        if (isInvulnerable && (System.currentTimeMillis() - lastRespawnTime > invulnerableTime)) {
+            isInvulnerable = false;
+        }
+        return isInvulnerable;
+    }
+
+
+
 
     public JLabel getPlayerLabel() {
         return playerLabel;
@@ -192,6 +220,22 @@ public class Player implements KeyListener {
     @Override
     public void keyTyped(KeyEvent e) {
         // Не используется
+    }
+
+    public int getPlayerX() {
+        return playerX;
+    }
+
+    public int getPlayerY() {
+        return playerY;
+    }
+
+    public int getPlayerWidth() {
+        return playerWidth;
+    }
+
+    public int getPlayerHeight() {
+        return playerHeight;
     }
 }
 

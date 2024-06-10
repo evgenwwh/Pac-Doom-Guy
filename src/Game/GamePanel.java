@@ -8,6 +8,8 @@ import java.util.ArrayList;
 
 public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     JFrame frame;
+    JLabel healthIndicator;
+    int health = 4;
     Thread gameThread;
     Player player;
     Checker checker;
@@ -19,12 +21,14 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     int score = 0, gameTime = 0;
     ArrayList<Demons> ghosts;
 
+
     public GamePanel(JFrame frame) {
         this.frame = frame;
         setBackground(Color.black);
         setLayout(null);
         setFocusable(true);
         addMouseMotionListener(this);
+        initializeHealthIndicator();
 
         mouseCoordinatesLabel = new JLabel();
         mouseCoordinatesLabel.setBounds(10, 10, 100, 20);
@@ -43,13 +47,49 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         ghosts = new ArrayList<>();
     }
 
-    public int getMapOffsetX() {
-        return mapOffsetX;
+
+    public void playerTouchedByGhost() {
+        if (!player.isInvulnerable()) {
+            health--;
+            System.out.println("Lives left: " + health);
+            updateHealthIndicator();
+            if (health > 0) {
+                player.respawn();  // Ensure this method resets the invulnerability correctly
+            } else {
+                gameOver();
+            }
+        }
     }
 
-    public int getMapOffsetY() {
-        return mapOffsetY;
+
+
+    private void initializeHealthIndicator() {
+        healthIndicator = new JLabel(new ImageIcon(getClass().getResource("/images/healthIndicator/hp1.png")));
+        healthIndicator.setBounds(10, 100, 50, 50);
+        add(healthIndicator);
     }
+    public void updateHealthIndicator() {
+        switch (health) {
+            case 4:
+                healthIndicator.setIcon(new ImageIcon(getClass().getResource("/images/healthIndicator/hp1.png")));
+                break;
+            case 3:
+                healthIndicator.setIcon(new ImageIcon(getClass().getResource("/images/healthIndicator/hp2.png")));
+                break;
+            case 2:
+                healthIndicator.setIcon(new ImageIcon(getClass().getResource("/images/healthIndicator/hp3.png")));
+                break;
+            case 1:
+                healthIndicator.setIcon(new ImageIcon(getClass().getResource("/images/healthIndicator/hp4.png")));
+                break;
+
+            default:
+                gameOver();
+                break;
+        }
+    }
+
+
 
     public int[][] getMap() {
         return map;
@@ -84,8 +124,8 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     private void addGhosts() {
         // Ensure ghost initial positions are within the map bounds
         ghosts.add(new Demons(this, checker, 516, 754));
-        ghosts.add(new Demons(this, checker, 1373, 339));
-        ghosts.add(new Demons(this, checker, 1375, 338));
+        ghosts.add(new Demons(this, checker, 1009, 382));
+        ghosts.add(new Demons(this, checker, 1247, 585));
 
         for (Demons ghost : ghosts) {
             add(ghost.getGhostLabel());
@@ -107,10 +147,6 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     }
 
     public void gameOver() {
-        gameThread = null;
-        for (Demons ghost : ghosts) {
-            ghost.stop();
-        }
         JOptionPane.showMessageDialog(this, "Game Over! Your score: " + score + ", Time: " + timeLabel.getText());
         System.exit(0);
     }
@@ -146,6 +182,7 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         while (gameThread != null) {
             try {
                 Thread.sleep(16); // Approx. 60 frames per second
+                player.isInvulnerable();
                 player.update();
                 repaint();
             } catch (InterruptedException e) {

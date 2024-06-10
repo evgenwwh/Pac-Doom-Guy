@@ -7,14 +7,14 @@ public class MapManager extends JPanel {
     private static JPanel[][] panelGrid;
     private static JLabel[][] dotGrid;
     static final int cellSize = 48;
-    private static final int dotSize = 10;
+    private static final int dotSize = 14;
 
     public static int[][] map1 = {
             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 2, 1, 2, 2, 2, 1, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 1, 3, 3, 1},
-            {1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 1, 2, 1, 1, 2, 3, 3, 3, 1},
-            {1, 2, 1, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 1, 3, 3, 1},
-            {1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1},
+            {1, 2, 1, 2, 2, 2, 1, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 1, 2, 2, 1},
+            {1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 1},
+            {1, 2, 1, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1},
+            {1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1},
             {1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 1},
             {1, 2, 1, 1, 1, 2, 2, 2, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1},
             {1, 2, 1, 2, 2, 2, 1, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1},
@@ -153,11 +153,11 @@ public class MapManager extends JPanel {
                 gbc.gridx = x;
                 gbc.gridy = y;
                 add(cellPanel, gbc);
-                panelGrid[y][x] = cellPanel; // Сохраняем панель в таблицу
+                panelGrid[y][x] = cellPanel;
 
                 if (map[y][x] == 2) {
                     JPanel dotPanel = new JPanel();
-                    dotPanel.setOpaque(false); // Make sure the panel is transparent
+                    dotPanel.setOpaque(false);
                     JLabel dotLabel = new JLabel(new ImageIcon(getClass().getResource("/images/dots/blood_dot.png")));
                     dotPanel.add(dotLabel);
                     GridBagConstraints dotGbc = new GridBagConstraints();
