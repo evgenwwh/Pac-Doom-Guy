@@ -2,8 +2,7 @@ package Game;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.util.ArrayList;
 
 public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
@@ -20,15 +19,30 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     JLabel scoreLabel, timeLabel;
     int score = 0, gameTime = 0;
     ArrayList<Demons> ghosts;
+    private boolean isPaused = false;
+    private JPanel pausePanel;
+    private CustomTimer gameTimer;
+    MenuPanel menu;
+    PanelSwitcher panelSwitcher;
 
-
-    public GamePanel(JFrame frame) {
+    public GamePanel(JFrame frame,PanelSwitcher panelSwitcher) {
         this.frame = frame;
+        this.panelSwitcher = panelSwitcher;
         setBackground(Color.black);
         setLayout(null);
         setFocusable(true);
         addMouseMotionListener(this);
+        initializePausePanel();
         initializeHealthIndicator();
+
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    togglePause();
+                }
+            }
+        });
 
         mouseCoordinatesLabel = new JLabel();
         mouseCoordinatesLabel.setBounds(10, 10, 100, 20);
@@ -48,18 +62,9 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     }
 
 
-    public void playerTouchedByGhost() {
-        if (!player.isInvulnerable()) {
-            health--;
-            System.out.println("Lives left: " + health);
-            updateHealthIndicator();
-            if (health > 0) {
-                player.respawn();  // Ensure this method resets the invulnerability correctly
-            } else {
-                gameOver();
-            }
-        }
-    }
+
+
+
 
 
 
@@ -68,6 +73,82 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         healthIndicator.setBounds(10, 100, 50, 50);
         add(healthIndicator);
     }
+
+    private void initializePausePanel() {
+        pausePanel = new JPanel(new GridBagLayout());
+        pausePanel.setBounds(0, 0, frame.getWidth(), frame.getHeight());
+        pausePanel.setBackground(new Color(0, 0, 0, 150));
+        pausePanel.setVisible(false);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10); // Padding around components
+
+        // Add "PAUSED" label
+        JLabel pausedLabel = new JLabel("PAUSED");
+        pausedLabel.setFont(new Font("Arial", Font.BOLD, 48));
+        pausedLabel.setForeground(Color.WHITE);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        pausePanel.add(pausedLabel, gbc);
+
+        // Add Resume button
+        JButton resumeButton = new JButton("Resume");
+        resumeButton.addActionListener(e -> togglePause());
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        gbc.anchor = GridBagConstraints.CENTER;
+        pausePanel.add(resumeButton, gbc);
+
+        // Add Menu button
+        JButton menuButton = new JButton("Main Menu");
+        menuButton.addActionListener(e -> {
+           panelSwitcher.switchToMenu();
+        });
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.CENTER;
+        pausePanel.add(menuButton, gbc);
+
+        setComponentZOrder(pausePanel, 0); // Ensure the pause panel is on top
+        add(pausePanel);
+    }
+
+
+    public void togglePause() {
+        isPaused = !isPaused;
+        if (isPaused) {
+            pausePanel.setVisible(true);
+            gameTimer.stop();
+            for (Demons ghost : ghosts) {
+                ghost.pause();
+            }
+        } else {
+            gameTimer.resume();
+            pausePanel.setVisible(false);
+            for (Demons ghost : ghosts) {
+                ghost.resume();
+            }
+            requestFocusInWindow();
+        }
+    }
+
+    public void playerTouchedByGhost() {
+        if (!player.isInvulnerable()) {
+            health--;
+            System.out.println("Lives left: " + health);
+            updateHealthIndicator();
+            if (health > 0) {
+                player.respawn(); // Ensure this method resets the invulnerability correctly
+            } else {
+                gameOver();
+            }
+        }
+    }
+
     public void updateHealthIndicator() {
         switch (health) {
             case 4:
@@ -82,21 +163,18 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
             case 1:
                 healthIndicator.setIcon(new ImageIcon(getClass().getResource("/images/healthIndicator/hp4.png")));
                 break;
-
             default:
                 gameOver();
                 break;
         }
     }
 
-
-
     public int[][] getMap() {
         return map;
     }
 
     public void startGame(int[][] map) {
-        this.map = map;
+        this.map = MapManager.copyMap(map);
         calculateMapOffset(map);
         checker = new Checker(map, mapOffsetX, mapOffsetY);
 
@@ -106,14 +184,15 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
         addKeyListener(player);
         requestFocusInWindow();
 
-        addGhosts();  // Initialize and add ghosts here
+        addGhosts(); // Initialize and add ghosts here
 
         JPanel mapPanel = MapManager.createMapPanel(map);
         mapPanel.setBounds(mapOffsetX, mapOffsetY, map[0].length * MapManager.cellSize, map.length * MapManager.cellSize);
         add(mapPanel);
 
         panelGrid = MapManager.getPanelGrid();
-        new CustomTimer(1000, this::updateGameTime).start();
+        gameTimer = new CustomTimer(1000, this::updateGameTime);
+        gameTimer.start();
 
         revalidate();
         repaint();
@@ -133,12 +212,14 @@ public class GamePanel extends JPanel implements Runnable, MouseMotionListener {
     }
 
     private void updateGameTime() {
-        gameTime++;
-        SwingUtilities.invokeLater(() -> {
-            int minutes = gameTime / 60;
-            int seconds = gameTime % 60;
-            timeLabel.setText(String.format("Time: %02d:%02d", minutes, seconds));
-        });
+        if (!isPaused) {
+            gameTime++;
+            SwingUtilities.invokeLater(() -> {
+                int minutes = gameTime / 60;
+                int seconds = gameTime % 60;
+                timeLabel.setText(String.format("Time: %02d:%02d", minutes, seconds));
+            });
+        }
     }
 
     public void incrementScore(int points) {

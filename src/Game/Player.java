@@ -59,8 +59,6 @@ public class Player implements KeyListener {
     }
 
 
-
-
     public JLabel getPlayerLabel() {
         return playerLabel;
     }

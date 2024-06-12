@@ -4,8 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MapManager extends JPanel {
-    private static JPanel[][] panelGrid;
-    private static JLabel[][] dotGrid;
+    static JPanel[][] panelGrid;
+    static JLabel[][] dotGrid;
     static final int cellSize = 48;
     private static final int dotSize = 14;
 
@@ -169,6 +169,22 @@ public class MapManager extends JPanel {
             }
         }
     }
+    public static void reset() {
+        panelGrid = null;
+        dotGrid = null;
+    }
+    public static int[][] copyMap(int[][] original) {
+        if (original == null) {
+            return null;
+        }
+        int[][] copy = new int[original.length][];
+        for (int i = 0; i < original.length; i++) {
+            copy[i] = original[i].clone();
+        }
+        return copy;
+    }
+
+
 
     public static JLabel[][] getDotGrid() {
         return dotGrid;

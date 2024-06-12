@@ -10,8 +10,11 @@ public class Demons implements Runnable {
     private JLabel ghostLabel = new JLabel(ghostIcon);
     private Checker checker;
     private boolean running = true;
+    private boolean paused = false;
     private int moveDirection = -1;
     private int moveCounter = 0;
+    int initialX;
+    int initialY;
 
     private CustomTimer moveTimer;
 
@@ -20,6 +23,8 @@ public class Demons implements Runnable {
         this.checker = checker;
         this.ghostX = initialX;
         this.ghostY = initialY;
+        this.initialX = initialX;
+        this.initialY = initialY;
         ghostLabel.setSize(ghostWidth, ghostHeight);
         ghostLabel.setLocation(ghostX, ghostY);
         gamePanel.add(ghostLabel);
@@ -34,6 +39,11 @@ public class Demons implements Runnable {
     public void run() {
         while (running) {
             try {
+                synchronized (this) {
+                    while (paused) {
+                        wait(); // Pause the thread
+                    }
+                }
                 checkCollisionWithPlayer();
                 Thread.sleep(16);
             } catch (InterruptedException e) {
@@ -43,6 +53,8 @@ public class Demons implements Runnable {
     }
 
     public void moveGhost() {
+        if (paused) return; // Stop moving if paused
+
         if (moveCounter <= 0 || !canMoveInCurrentDirection()) {
             chooseNewDirection();
             checkCollisionWithPlayer();
@@ -62,15 +74,17 @@ public class Demons implements Runnable {
             ghostLabel.setLocation(ghostX, ghostY);
             moveCounter--;
         } else {
-            moveCounter = 0; // Reset the counter if movement is blocked
+            moveCounter = 0;
         }
     }
+
+
 
     private void chooseNewDirection() {
         int trials = 0;
         boolean canMove;
         do {
-            moveDirection = (int) (Math.random() * 4);  // Generate a random direction
+            moveDirection = (int) (Math.random() * 4);
             int dx = 0, dy = 0;
             switch (moveDirection) {
                 case 0: dx = -ghostSpeed; break;
@@ -84,10 +98,10 @@ public class Demons implements Runnable {
 
         moveCounter = (int) (Math.random() * 51) + 50;
     }
-    private void checkCollisionWithPlayer() {
-        Rectangle ghostBounds = new Rectangle(ghostX, ghostY, ghostWidth + 10, ghostHeight + 10);
-        Rectangle playerBounds = new Rectangle(gamePanel.getPlayer().getPlayerX(), gamePanel.getPlayer().getPlayerY(), gamePanel.getPlayer().getPlayerWidth() + 10, gamePanel.getPlayer().getPlayerHeight() + 10);
 
+    private void checkCollisionWithPlayer() {
+        Rectangle ghostBounds = new Rectangle(ghostX, ghostY, ghostWidth, ghostHeight);
+        Rectangle playerBounds = new Rectangle(gamePanel.getPlayer().getPlayerX(), gamePanel.getPlayer().getPlayerY(), gamePanel.getPlayer().getPlayerWidth(), gamePanel.getPlayer().getPlayerHeight());
 
         if (ghostBounds.intersects(playerBounds)) {
             if (!gamePanel.getPlayer().isInvulnerable()) {
@@ -95,10 +109,6 @@ public class Demons implements Runnable {
             }
         }
     }
-
-
-
-
 
     private boolean canMoveInCurrentDirection() {
         int dx = 0, dy = 0;
@@ -117,9 +127,18 @@ public class Demons implements Runnable {
 
     public void stop() {
         running = false;
-        moveTimer.stop(); // Stop the timer when stopping the demon
+        moveTimer.stop();
+    }
+
+    public synchronized void pause() {
+        paused = true;
+    }
+
+    public synchronized void resume() {
+        paused = false;
     }
 }
+
 
 
 

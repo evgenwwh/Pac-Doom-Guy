@@ -5,6 +5,7 @@ public class CustomTimer implements Runnable {
     private final Runnable task;
     private boolean running;
 
+
     public CustomTimer(int delay, Runnable task) {
         this.delay = delay;
         this.task = task;
@@ -18,6 +19,13 @@ public class CustomTimer implements Runnable {
 
     public void stop() {
         running = false;
+
+    }
+
+    public void resume() {
+        running = true;
+        Thread thread = new Thread(this);
+        thread.start();
     }
 
     @Override

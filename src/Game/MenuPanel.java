@@ -5,20 +5,24 @@ import java.awt.*;
 
 public class MenuPanel {
     JButton newGameButton;
+    MenuPanel menu;
     JButton exitButton;
     JButton recordButton;
     JPanel mainPanel = new JPanel(new GridBagLayout());
     JLabel nameOfGame;
-    JFrame menuFrame;
+    JFrame frame;
     GamePanel gamePanel;
+    PanelSwitcher panelSwitcher;
 
     public MenuPanel(JFrame frame) {
-        this.menuFrame = frame;
-        this.gamePanel = new GamePanel(frame);
+        this.frame = frame;
+        this.panelSwitcher = new PanelSwitcher(frame,this);
+        this.gamePanel = new GamePanel(frame, panelSwitcher);
     }
 
     public JPanel startGame() {
         mainPanel.removeAll();
+
 
         newGameButton = new JButton("New Game");
         exitButton = new JButton("Exit");
@@ -54,57 +58,7 @@ public class MenuPanel {
         return mainPanel;
     }
 
-    private void switchToGamePanel(String mapName) {
-        if ("Earth".equals(mapName)) {
-            menuFrame.getContentPane().removeAll();
-            menuFrame.add(gamePanel);
-            menuFrame.revalidate();
-            menuFrame.repaint();
-            gamePanel.startGame(MapManager.map5);
-            gamePanel.requestFocusInWindow();
-        }if ("Argent Nur".equals(mapName)) {
-            menuFrame.getContentPane().removeAll();
-            menuFrame.add(gamePanel);
-            menuFrame.revalidate();
-            menuFrame.repaint();
-            gamePanel.startGame(MapManager.map1);
-            gamePanel.requestFocusInWindow();
-        }
-        if ("Mars".equals(mapName)) {
-            menuFrame.getContentPane().removeAll();
-            menuFrame.add(gamePanel);
-            menuFrame.revalidate();
-            menuFrame.repaint();
-            gamePanel.startGame(MapManager.map2);
-            gamePanel.requestFocusInWindow();
-        }
-        if ("HELL".equals(mapName)) {
-            menuFrame.getContentPane().removeAll();
-            menuFrame.add(gamePanel);
-            menuFrame.revalidate();
-            menuFrame.repaint();
-            gamePanel.startGame(MapManager.map3);
-            gamePanel.requestFocusInWindow();
-        }
-        if ("Space ship".equals(mapName)) {
-            menuFrame.getContentPane().removeAll();
-            menuFrame.add(gamePanel);
-            menuFrame.revalidate();
-            menuFrame.repaint();
-            gamePanel.startGame(MapManager.map4);
-            gamePanel.requestFocusInWindow();
-        }
 
-
-//        menuFrame.getContentPane().removeAll();
-//        gamePanel = new GamePanel(menuFrame); // Recreate GamePanel with new parameters
-//        gamePanel.startGame();
-//        menuFrame.add(gamePanel);
-//        menuFrame.revalidate();
-//        menuFrame.repaint();
-//
-//        gamePanel.requestFocusInWindow();
-    }
 
     public JPanel pressNewGame() {
         mainPanel.removeAll();
@@ -125,11 +79,11 @@ public class MenuPanel {
         backButton.setPreferredSize(new Dimension(100, 50));
 
         backButton.addActionListener(e -> startGame());
-        map1Button.addActionListener(e -> switchToGamePanel("Argent Nur"));
-        map2Button.addActionListener(e -> switchToGamePanel("Mars"));
-        map3Button.addActionListener(e -> switchToGamePanel("HELL"));
-        map4Button.addActionListener(e -> switchToGamePanel("Space ship"));
-        map5Button.addActionListener(e -> switchToGamePanel("Earth"));
+        map1Button.addActionListener(e -> panelSwitcher.switchToGamePanel("Argent Nur"));
+        map2Button.addActionListener(e -> panelSwitcher.switchToGamePanel("Mars"));
+        map3Button.addActionListener(e -> panelSwitcher.switchToGamePanel("HELL"));
+        map4Button.addActionListener(e -> panelSwitcher.switchToGamePanel("Space ship"));
+        map5Button.addActionListener(e -> panelSwitcher.switchToGamePanel("Earth"));
 
         text.setFont(new Font("Arial", Font.ITALIC, 84));
         text.setForeground(new Color(0xFFFFFF));
